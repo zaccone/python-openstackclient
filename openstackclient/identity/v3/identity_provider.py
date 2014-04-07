@@ -34,14 +34,19 @@ class CreateIdentityProvider(show.ShowOne):
     def get_parser(self, prog_name):
         parser = super(CreateIdentityProvider, self).get_parser(prog_name)
         parser_add_argument(
-            '--id',
-            metavar='<identity_provider id>',
-            help='New identity_provider id (must be unique)'
+            'identity_provider',
+            metavar='<identity_provider_id>',
+            help='New identity_provider_id (must be unique)'
         )
         parser.add_argument(
             '--description',
             metavar='<description>',
             help='New identity_provider description',
+        )
+        parser.add_argument(
+            '--enabled',
+            metavar='<enabled>',
+            help='Set identity_provider as enabled'
         )
         return parser
 
@@ -49,14 +54,13 @@ class CreateIdentityProvider(show.ShowOne):
         self.log.debug('take_action(%s)' % parsed_args)
         identity_client = self.app.client_manager.identity
         idp = identity_client.identity_providers.create(
-            parsed_args.id, parsed_args.description
-        )
+            parsed_args.id, parsed_args.description, parsed_args.enabled)
         info = {}
         info.update(idp._info)
         return zip(*sorted(six.iteritems(info)))
 
 
-class DeleteIdenityProvider(command.Command):
+class DeleteIdentityProvider(command.Command):
     """Delete identity_provider command"""
 
     log = logging.getLogger(__name__ + '.DeleteIdentityProvider')
@@ -75,7 +79,7 @@ class DeleteIdenityProvider(command.Command):
         identity_client = self.app.client_manager.identity
         identity_provider = utils.find_resource(
             identity_client.identity_providers, parsed_args.identity_provider)
-        identity_client.identity_providers.delete_identity_provider(identity_provider.id)
+        identity_client.identity_providers.delete(identity_provider)
         return
 
 
@@ -86,8 +90,8 @@ class ListIdentityProvider(lister.Lister):
 
     def take_action(self, parsed_args):
         self.log.debug('take_action(%s)' % parsed_args)
-        columns = ('ID', 'Description')
-        data = self.app.client_manager.identity.identity_providers.list_identity_providers()
+        columns = ('ID', 'Enabled', 'Description')
+        data = self.app.client_manager.identity.identity_providers.list()
         return (columns,
                 (utils.get_item_properties(
                     s, columns,
@@ -108,9 +112,9 @@ class SetIdentityProvider(command.Command):
             help='ID of identity_provider to change',
         )
         parser.add_argument(
-            '--description',
-            metavar='<new-identity_provider-description>',
-            help='New identity_provider description',
+            '--enabled',
+            metavar='<identity_provider-enabled>',
+            help='Update identity provider',
         )
         return parser
 
@@ -120,14 +124,15 @@ class SetIdentityProvider(command.Command):
         identity_provider = utils.find_resource(
             identity_client.identity_providers, parsed_args.identity_provider)
         kwargs = {}
-        if parsed_args.description:
-            kwargs['description'] = parsed_args.description
+        if parsed_args.enabled:
+            kwargs['enabled'] = parsed_args.enabled
 
         if not len(kwargs):
-            sys.stdout.write("IdentityProvider not updated, no arguments present")
+            sys.stdout.write("IdentityProvider not updated, "
+                             "no arguments present")
             return
 
-        identity_provider = identity_client.identity_providers.update_identity_provider(
+        identity_provider = identity_client.identity_providers.update(
             identity_provider.id,
             **kwargs
         )
