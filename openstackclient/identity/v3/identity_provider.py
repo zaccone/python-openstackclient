@@ -70,7 +70,7 @@ class DeleteIdentityProvider(command.Command):
         parser.add_argument(
             'identity_provider',
             metavar='<identity_provider>',
-            help='ID of identity_provider to delete',
+            help='Id of the identity_provider to be deleted',
         )
         return parser
 

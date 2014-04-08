@@ -33,23 +33,42 @@ class TestIdentityProvider(identity_fakes.TestFederatedIdentity):
 class TestIdentityProviderCreate(TestIdentityProvider):
 
         def setUp(self):
-                super(TestIdentityProviderCreate, self).setUp()
+            super(TestIdentityProviderCreate, self).setUp()
 
-                self.identity_providers_mock.return_value = fakes.FakeResource(
-                    None,
-                    copy.deepcopy(identity_fakes.IDENTITY_PROVIDER),
-                    loaded=True
-                )
+            self.identity_providers_mock.create.return_value = fakes.FakeResource(
+                None,
+                copy.deepcopy(identity_fakes.IDENTITY_PROVIDER),
+                loaded=True
+            )
 
-                self.cmd = identity_provider.CreateIdentityProvider(
-                    self.app, None)
+            self.cmd = identity_provider.CreateIdentityProvider(
+                self.app, None)
 
         def test_create_empty_identity_provider(self):
-                arglist = [
-                        identity_fakes.idp_id
-                ]
-                verifylist = [
-                        ('identity_provider', identity_fakes.idp_id)
-                ]
-                parsed_args = self.check_parser(self.cmd, arglist, verifylist)
-                columns, data = self.cmd.take_action(parsed_args)
+            arglist = [
+                '--description', identity_fakes.idp_description,
+                    identity_fakes.idp_id
+            ]
+            verifylist = [
+                    ('identity_provider', identity_fakes.idp_id),
+                    ('description', identity_fakes.idp_description)
+            ]
+            parsed_args = self.check_parser(self.cmd, arglist, verifylist)
+            columns, data = self.cmd.take_action(parsed_args)
+
+            # Set expected values
+            kwargs = {
+                'description': identity_fakes.idp_description,
+                'enabled': True,
+            }
+
+            self.identity_providers_mock.create.assert_called_with(
+                identity_fakes.idp_id, **kwargs)
+
+            collist = ('id', 'description', 'enabled')
+            self.assertEqual(columns, collist)
+            datalist = (
+                identity_fakes.idp_id,
+            )
+
+            self.assertEqual(data, datalist)
