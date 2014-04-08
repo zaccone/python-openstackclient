@@ -33,10 +33,10 @@ class CreateIdentityProvider(show.ShowOne):
 
     def get_parser(self, prog_name):
         parser = super(CreateIdentityProvider, self).get_parser(prog_name)
-        parser_add_argument(
+        parser.add_argument(
             'identity_provider',
-            metavar='<identity_provider_id>',
-            help='New identity_provider_id (must be unique)'
+            metavar='<identity_provider>',
+            help='New identity_provider id (must be unique)'
         )
         parser.add_argument(
             '--description',
@@ -54,7 +54,7 @@ class CreateIdentityProvider(show.ShowOne):
         self.log.debug('take_action(%s)' % parsed_args)
         identity_client = self.app.client_manager.identity
         idp = identity_client.identity_providers.create(
-            parsed_args.id, parsed_args.description, parsed_args.enabled)
+            parsed_args.identity_provider, parsed_args.description, parsed_args.enabled)
         info = {}
         info.update(idp._info)
         return zip(*sorted(six.iteritems(info)))
@@ -113,7 +113,7 @@ class SetIdentityProvider(command.Command):
         )
         parser.add_argument(
             '--enabled',
-            metavar='<identity_provider-enabled>',
+            metavar='<identity_provider_enabled>',
             help='Update identity provider',
         )
         return parser
@@ -133,9 +133,7 @@ class SetIdentityProvider(command.Command):
             return
 
         identity_provider = identity_client.identity_providers.update(
-            identity_provider.id,
-            **kwargs
-        )
+            identity_provider.id, **kwargs)
 
         info = {}
         info.update(identity_provider._info)
